@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formatar - Planilha de Contatos</title>
+    <link rel="stylesheet" href="style/styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="assets/images/logo.png" alt="Logo da ClickMassa">
+        </div>
+    </header>
+    <div class="container">
+        <h1>Planilha de Contatos</h1>
+        <p>Formate os números de seus contatos e baixe uma planilha pronta para disparos!</p>
+        <label for="entradaContatos">Contatos:</label>
+        <textarea id="entradaContatos" rows="15" placeholder=
+"Insira: nome, telefone (Com DDD)
+EX: brunno, 8412345678"></textarea>
+        <button onclick="gerarExcel()">Gerar planilha</button>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script src="script/script.js"></script>
+</body>
+</html>
