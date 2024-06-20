@@ -12,24 +12,30 @@ function gerarExcel() {
         }
     };
 
-    function formatarNumero(numero) {
-        numero = numero.replace(/\D/g, '');
+function formatarNumero(numero) {
+    numero = numero.replace(/\D/g, '');
 
-        if (numero.startsWith('55')) {
-            numero = numero.substring(2);
-        }
-
-        const ddd = numero.substring(0, 2);
-        let resto = numero.substring(2);
-
-        if (resto.length === 8) {
-            resto = '9' + resto;
-        }
-
-        numero = '55' + ddd + resto;
-
-        return numero;
+    if (numero.length > 11 && numero.startsWith('55')) {
+        numero = numero.substring(2);
     }
+
+    const ddd = numero.substring(0, 2);
+    let resto = numero.substring(2);
+
+    if (resto.length === 8) {
+        resto = '9' + resto;
+    } else if (resto.length === 9 && resto[0] !== '9') {
+        resto = '9' + resto;
+    }
+
+    if (resto.length === 9 && resto[0] !== '9') {
+        return null; 
+    }
+
+    numero = '55' + ddd + resto;
+
+    return numero;
+}
 
     const entradaContatos = document.getElementById('entradaContatos').value;
 
@@ -38,22 +44,29 @@ function gerarExcel() {
 
     const contatos = linhas.map((linha, index) => {
         const partes = linha.split(',');
-        
+
         if (partes.length !== 2) {
             exibirModal(`A linha ${index + 1} está incompleta. Por favor, adicione o nome e o número (com DDD).`);
+            marcarNumeroInvalido(index + 1);
             return null;
         }
 
         const [nome, numeroBruto] = partes;
         const numeroLimpo = numeroBruto.replace(/\D/g, '');
 
-        if (numeroLimpo.length <= 9) {
+        if (numeroLimpo.length < 10 || numeroLimpo.length > 13) {
             numerosInvalidos.push(numeroBruto);
-            marcarNumeroInvalido(index + 1); 
+            marcarNumeroInvalido(index + 1);
             return null;
         }
 
         const numeroFormatado = formatarNumero(numeroBruto.trim());
+
+        if (!numeroFormatado) {
+            numerosInvalidos.push(numeroBruto);
+            marcarNumeroInvalido(index + 1);
+            return null;
+        }
 
         return { nome: nome.trim(), contato: numeroFormatado };
     }).filter(Boolean);
@@ -66,13 +79,11 @@ function gerarExcel() {
             numerosInvalidos.push(contato.contato);
             marcarNumeroInvalido(index + 1);
         } else {
-            if (ddd === '11' || ddd === '21' || ddd === '22' || ddd === '24' || ddd === '27' || ddd === '28') {
-                if (numeroLimpo.length !== 12) {
-                    numerosInvalidos.push(contato.contato);
-                    marcarNumeroInvalido(index + 1);
-                }
+            if (numeroLimpo.length !== 13) {
+                numerosInvalidos.push(contato.contato);
+                marcarNumeroInvalido(index + 1);
             } else {
-                if (numeroLimpo.length !== 13) {
+                if (numeroLimpo[4] !== '9') {
                     numerosInvalidos.push(contato.contato);
                     marcarNumeroInvalido(index + 1);
                 }
@@ -82,7 +93,7 @@ function gerarExcel() {
 
     if (numerosInvalidos.length > 0) {
         const numerosInvalidosMsg = numerosInvalidos.map(numero => `"${numero}"`).join(', ');
-        exibirModal(`Corrija os números antes de gerar a planilha, siga o modelo "nome, contato".`);
+        exibirModal(`Corrija os números antes de gerar a planilha, siga o modelo "nome, contato", lembre-se do DDD.`);
         return;
     }
 
