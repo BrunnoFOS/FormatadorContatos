@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formatar - Planilha de Contatos</title>
     <link rel="stylesheet" href="style/styles.css">
+    <link rel="icon" href="assets/images/logo.png">
 </head>
 <body>
     <header>
@@ -21,6 +22,14 @@
 EX: brunno, 8412345678"></textarea>
         <button onclick="gerarExcel()">Gerar planilha</button>
     </div>
+
+    <div id="modalAviso" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="modalMessage"></p>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
     <script src="script/script.js"></script>
 </body>

@@ -19,21 +19,11 @@ function gerarExcel() {
             numero = numero.substring(2);
         }
 
-        if (numero.length === 8 || numero.length === 9) {
-            numero = '84' + numero;
-        }
-
         const ddd = numero.substring(0, 2);
         let resto = numero.substring(2);
 
-        if (!['SP', 'RJ', 'ES'].includes(dadosDdd.estadoPorDdd[ddd])) {
-            if (resto.length === 8) {
-                resto = '9' + resto;
-            }
-        } else {
-            if (resto.startsWith('9') && resto.length === 9) {
-                resto = resto.substring(1);
-            }
+        if (resto.length === 8) {
+            resto = '9' + resto;
         }
 
         numero = '55' + ddd + resto;
@@ -44,12 +34,62 @@ function gerarExcel() {
     const entradaContatos = document.getElementById('entradaContatos').value;
 
     const linhas = entradaContatos.trim().split('\n');
-    const contatos = linhas.map(linha => {
-        const [nome, numeroBruto] = linha.split(',');
+    const numerosInvalidos = [];
+
+    const contatos = linhas.map((linha, index) => {
+        const partes = linha.split(',');
+        
+        if (partes.length !== 2) {
+            exibirModal(`A linha ${index + 1} está incompleta. Por favor, adicione o nome e o número (com DDD).`);
+            return null;
+        }
+
+        const [nome, numeroBruto] = partes;
+        const numeroLimpo = numeroBruto.replace(/\D/g, '');
+
+        if (numeroLimpo.length <= 9) {
+            numerosInvalidos.push(numeroBruto);
+            marcarNumeroInvalido(index + 1); 
+            return null;
+        }
+
         const numeroFormatado = formatarNumero(numeroBruto.trim());
 
         return { nome: nome.trim(), contato: numeroFormatado };
+    }).filter(Boolean);
+
+    contatos.forEach((contato, index) => {
+        const numeroLimpo = contato.contato.replace(/\D/g, '');
+        const ddd = numeroLimpo.substring(2, 4);
+
+        if (!(ddd in dadosDdd.estadoPorDdd)) {
+            numerosInvalidos.push(contato.contato);
+            marcarNumeroInvalido(index + 1);
+        } else {
+            if (ddd === '11' || ddd === '21' || ddd === '22' || ddd === '24' || ddd === '27' || ddd === '28') {
+                if (numeroLimpo.length !== 12) {
+                    numerosInvalidos.push(contato.contato);
+                    marcarNumeroInvalido(index + 1);
+                }
+            } else {
+                if (numeroLimpo.length !== 13) {
+                    numerosInvalidos.push(contato.contato);
+                    marcarNumeroInvalido(index + 1);
+                }
+            }
+        }
     });
+
+    if (numerosInvalidos.length > 0) {
+        const numerosInvalidosMsg = numerosInvalidos.map(numero => `"${numero}"`).join(', ');
+        exibirModal(`Corrija os números antes de gerar a planilha, siga o modelo "nome, contato".`);
+        return;
+    }
+
+    if (contatos.length === 0) {
+        exibirModal('Nenhum contato válido foi inserido, certifique-se de usar o modelo informado (nome, telefone).');
+        return;
+    }
 
     const planilha = XLSX.utils.json_to_sheet(contatos);
     const pastaTrabalho = XLSX.utils.book_new();
@@ -57,3 +97,34 @@ function gerarExcel() {
 
     XLSX.writeFile(pastaTrabalho, 'contatos.xlsx');
 }
+
+function exibirModal(mensagem) {
+    const modal = document.getElementById('modalAviso');
+    const modalMessage = document.getElementById('modalMessage');
+    modal.style.display = 'block';
+    modalMessage.textContent = mensagem;
+}
+
+function marcarNumeroInvalido(numeroLinha) {
+    const inputContatos = document.getElementById('entradaContatos');
+    let linhas = inputContatos.value.split('\n');
+    const linhaInvalida = linhas[numeroLinha - 1];
+
+    if (!linhaInvalida.startsWith('-->')) {
+        linhas[numeroLinha - 1] = `--> ${linhaInvalida}`;
+        inputContatos.value = linhas.join('\n');
+    }
+}
+
+const spanClose = document.getElementsByClassName('close')[0];
+spanClose.onclick = function() {
+    const modal = document.getElementById('modalAviso');
+    modal.style.display = 'none';
+};
+
+window.onclick = function(event) {
+    const modal = document.getElementById('modalAviso');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+};
