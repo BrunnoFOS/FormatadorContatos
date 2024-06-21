@@ -43,7 +43,7 @@ function formatarNumero(numero) {
     const numerosInvalidos = [];
 
     const contatos = linhas.map((linha, index) => {
-        const partes = linha.split(',');
+        const partes = linha.split(/[;,]+/);
 
         if (partes.length !== 2) {
             exibirModal(`A linha ${index + 1} está incompleta. Por favor, adicione o nome e o número (com DDD).`);
